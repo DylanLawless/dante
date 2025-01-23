@@ -1,0 +1,770 @@
+---
+header-includes:
+output:
+  bookdown::pdf_document2:
+    includes:
+      in_header: header.tex
+      before_body: body.tex
+    latex_engine: xelatex
+    keep_tex: false
+biblio-style: apsr
+urlcolor: #701A57
+keywords: "SwissPedHealth, genetic report, WGS, DNA"
+date: "`r Sys.Date()`"
+params: # These need to be updated to use var from report_runner.R
+  singlecase_ID: "default"
+  data_checksum: "N/A" # default if not passed
+  pdf_list: "default"
+tables: true
+# graphics: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(kableExtra)  # Make sure to load or mention necessary R packages if not already done
+# You can directly access parameters like this throughout the document
+singlecase_ID <- params$singlecase_ID
+pdf_list <- params$pdf_list
+
+```
+
+\vfill
+
+**Patient ID**: `r singlecase_ID`
+
+```{r setupcheck, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(digest)
+```
+
+The MD5 checksum of this document is: \texttt{`r data_checksum`}.
+
+\vfill
+
+This document presents an automated clinical genetics report as part of the SwissPedHealth lighthouse project for multiomic analysis. The process encapsulates the progression from raw data processing (e.g., FASTQ for DNA/RNA) to refined results (e.g., genetic variant interpretation in DNA). 
+
+\vfill
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+source("pca.R")
+
+df_current_clinical <- df |> filter(Individual.ID == singlecase_ID)
+
+```
+
+<!-- "Individual.ID" is used to get the patient phenotype data from pca.R -->
+
+
+- **Patient ID**: `r params$singlecase_ID`
+- **Patient ID**: `r df_current_clinical$singlecase_ID`
+- **Sample group**: `r df_current_clinical$sample_group`
+- **Sample subgroup**: `r df_current_clinical$sample_subgroup`
+- **Sex from clinical report**: `r df_current_clinical$sex_from_clinical_report`
+- **Sex from DNA**: `r df_current_clinical$sex_from_dna`
+- **Age of onset in days**: `r df_current_clinical$age_of_onset_in_days`
+
+<!-- > names(df) -->
+<!--  [1] "Individual.ID"            "Population"               -->
+<!--  [3] "sample_id"                "sample_group"             -->
+<!--  [5] "sample_subgroup"          "sex_from_clinical_report" -->
+<!--  [7] "sex_from_dna"             "sex_from_dna_methylation" -->
+<!--  [9] "sex_from_rnaseq"          "age_of_onset_in_days"     -->
+<!-- [11] "Family.ID"                "Paternal.ID"              -->
+<!-- [13] "Maternal.ID"              "Gender"                   -->
+<!-- [15] "Phenotype"                "Relationship"             -->
+<!-- [17] "Siblings"                 "Second.Order"             -->
+<!-- [19] "Third.Order"              "Other.Comments"           -->
+<!-- [21] "PC1"                      "PC2"                      -->
+<!-- [23] "PC3"                      "PC4"                      -->
+<!-- [25] "PC5"                      "PC6"                      -->
+<!-- [27] "PC7"                      "PC8"                      -->
+<!-- [29] "PC9"                      "PC10"                     -->
+<!-- [31] "PC11"                     "PC12"                     -->
+<!-- [33] "PC13"                     "PC14"                     -->
+<!-- [35] "PC15"                     "PC16"                     -->
+<!-- [37] "PC17"                     "PC18"                     -->
+<!-- [39] "PC19"                     "PC20"                     -->
+<!-- [41] "cohort"                   "Continent"                -->
+<!-- [43] "InferredPopulation"     -->
+
+
+\clearpage
+
+# Snapshot 
+
+This patient, `r params$singlecase_ID`
+(`r df_current_clinical$sex_from_clinical_report`),
+was analysed to identify genetic determinants for the clinical diagnosis of phenotype
+`r df_current_clinical$sample_group`
+(and phenotype subgroup 
+`r df_current_clinical$sample_subgroup`). 
+The age (days) of onset was 
+`r df_current_clinical$age_of_onset_in_days`.
+The following candidate causal variant(s) were identified with the use of
+\colorbox{kispiblue!10}{\texttt{Design DNA SNV INDEL v1}} pipeline, which implements
+\colorbox{kispiblue!10}{\texttt{Design QV SNV INDEL v1}} criteria, with the controlled dataset
+\colorbox{kispiblue!10}{\texttt{Design DNA SNV INDEL v1 release}}.
+This pipeline is concerned with WGS germline short variant discovery (SNVs + Indels) and interpretation.
+
+<!-- \begin{landscape} -->
+```{r transposed-table, echo=FALSE, results='asis'}
+# library(kableExtra)
+# 
+# https://haozhu233.github.io/kableExtra/awesome_table_in_pdf.pdf
+# x <- kable(current_data, "latex", booktabs = TRUE) %>%
+#   kable_styling(full_width = TRUE, font_size = 8) %>%
+#   column_spec(5:6, width = "3cm") 
+# 
+# column_spec(x, 1, latex_column_spec = ">{\\\\color{kispiblue}}c")  
+```
+`r print("! Only variants 1-5 shown")`
+<!-- \end{landscape} -->
+
+<!-- #e0f2f1 -->
+<!-- #b2dfdb -->
+<!-- #52b4b5 -->
+<!-- #2980b9 -->
+<!-- #d35400 -->
+
+
+
+```{r}
+# Define the color function to take a numerical score as input
+# This function duplicated for numeric and character
+# 
+# Numeric-based scoring function: This version is used when processing individual patient data where scores are numeric. It returns the color formatting based on the numerical score value.
+get_score_color <- function(score) {
+  if (score >= 10) {
+    "\\colorbox{colorSUNSET5}{\\textcolor{white}{"  # High risk in red with white text
+  } else if (score >= 6 && score <= 9) {
+    "\\colorbox{colorSUNSET4}{\\textcolor{white}{"  # Medium-high risk in orange
+  } else if (score >= 0 && score <= 5) {
+    "\\colorbox{colorSUNSET3}{\\textcolor{black}{"  # Uncertain risk in yellow
+  } else if (score >= -6 && score <= -1) {
+    "\\colorbox{colorSUNSET2}{\\textcolor{black}{"  # Low risk in light green
+  } else if (score <= -7) {
+    "\\colorbox{colorSUNSET1}{\\textcolor{black}{"  # Minimal risk in light blue
+  } else {
+    "\\textcolor{black}{"  # Default color for unspecified scores
+  }
+}
+
+# String-based scoring function: This version is applied in the context where score ranges are provided as strings (like in your legend). It's necessary to determine the color based on the predefined ranges rather than a single numeric score.
+# 
+get_score_color_by_range <- function(range) {
+  if (grepl("≥10", range)) {
+    "\\colorbox{colorSUNSET5}{\\textcolor{white}{"
+  } else if (grepl("6 to 9", range)) {
+    "\\colorbox{colorSUNSET4}{\\textcolor{white}{"
+  } else if (grepl("0 to 5", range)) {
+    "\\colorbox{colorSUNSET3}{\\textcolor{black}{"
+  } else if (grepl("-1 to -6", range)) {
+    "\\colorbox{colorSUNSET2}{\\textcolor{black}{"
+  } else if (grepl("≤ -7", range)) {
+    "\\colorbox{colorSUNSET1}{\\textcolor{black}{"
+  } else {
+    "\\textcolor{black}{"
+  }
+}
+```
+
+```{r results='asis', echo=FALSE}
+# Define a function to assign colors to impact categories
+get_impact_color <- function(impact) {
+  switch(impact,
+    "HIGH" = "\\colorbox{colorSUNSET5}{\\textcolor{white}{",
+    "MODERATE" = "\\colorbox{colorSUNSET4}{\\textcolor{white}{",
+    "LOW" = "\\colorbox{colorSUNSET2}{\\textcolor{black}{",
+    "MODIFIER" = "\\colorbox{colorSUNSET1}{\\textcolor{black}{",
+    "\\textcolor{black}{"  # Default case for unspecified impacts
+  )
+}
+```
+
+```{r results='asis', echo=FALSE}
+for (i in 1:nrow(current_data)) {
+  
+  # Conditional formatting for Guru score field
+  score_color_start <- get_score_color(current_data$ACMG_total_score[i])
+  score_text <- paste0(score_color_start, current_data$ACMG_total_score[i], "}}")
+  
+  # Conditional formatting for IMPACT field
+  impact_color_start <- get_impact_color(current_data$IMPACT[i])
+  impact_text <- paste0(impact_color_start, current_data$IMPACT[i], "}}")
+  
+  # Define the title using the loop index
+  box_title <- paste0("Patient candidate variant ", i)
+
+  # Start the tcolorbox with a dynamic title
+  cat(sprintf("\\begin{tcolorbox}[colback=gray!05, colframe=kispiblue, boxrule=0.5mm, arc=1mm, boxsep=2mm, title=%s]\n", box_title))
+
+  # Start the tabular environment to align text at the colon
+  cat("\\begin{tabular}{@{}l@{\\hspace{3pt}}l@{}}\n")  # Adjust spacing as needed
+
+  cat(paste0("Patient ID: &", current_data$sample.id[i], "\\\\ \n"))
+  cat(paste0("Guru score: &", score_text, "\\\\ \n"))
+  cat(paste0("Impact: &", impact_text, "\\\\ \n"))
+  cat(paste0("Gene symbol: &", current_data$SYMBOL[i], "\\\\ \n"))
+  cat(paste0("Consequence: &", current_data$Consequence[i], "\\\\ \n"))
+  cat(paste0("HGVSc (cDNA change): &", current_data$HGVSc[i], "\\\\ \n"))
+  cat(paste0("HGVSp (Protein change): &", current_data$HGVSp[i], "\\\\ \n"))
+  cat(paste0("Genotype: &", current_data$genotype[i], "\\\\ \n"))
+  cat(paste0("gnomAD allele frequency: &", current_data$gnomAD_AF[i], "\\\\ \n"))
+  cat(paste0("Compound heterozygous flag: &", current_data$comp_het_flag[i], "\\\\ \n"))
+  cat(paste0("ACMG count: &", current_data$ACMG_count[i], "\\\\ \n"))
+  cat(paste0("Patient max score: &", current_data$MaxScore[i], "\\\\ \n"))
+
+  cat("\\end{tabular}\n")
+  cat("\\end{tcolorbox}\n\\vspace{5mm}\n")  
+}
+```
+
+
+```{r results='asis', echo=FALSE}
+# Create a legend for the score ranges using colors, in reverse order
+legend_guru_score <- ""
+for (i in length(categories):1) {
+  color_start <- get_score_color_by_range(point_ranges[i])
+  legend_guru_score <- paste0(legend_guru_score, color_start, point_ranges[i], "}}", if (i > 1) ", " else "")
+}
+
+# Print the legend text as a standalone line
+cat(paste0("Guru score range: ", legend_guru_score))
+```
+
+```{r results='asis', echo=FALSE}
+# Impact categories and their human-readable labels
+impact_categories <- c("MODIFIER", "LOW", "MODERATE", "HIGH")  # Correct order
+
+# Construct the legend text for impact categories using the same function
+legend_impact_text <- sapply(impact_categories, function(impact) {
+  color_start <- get_impact_color(impact)
+  paste0(color_start, impact, "}}")
+}, USE.NAMES = FALSE)
+
+# Combine the impact text into a single line
+legend_impact_line <- paste(legend_impact_text, collapse=", ")
+
+# Print the legend text as a standalone line
+cat(paste0(""))
+cat(paste0("Impact range: ", legend_impact_line))
+```
+
+
+```{r, include=FALSE}
+# This chunk ensures LaTeX knows how to handle hyperlinks and labels
+knitr::asis_output("\\usepackage{hyperref}")
+```
+
+
+**For context on**:
+Guru score see table \ref{tab:acmg_scoring},
+Impact see table \ref{tab:vep_cons},
+Consequence see figure \ref{fig:vepcons},
+HGVSc and HGVSp see section \ref{variant-nomenclature} (variant nomenclature),
+gnomAD allele frequency see ...,
+Genotype see ...,
+Compound heterozygous flag see ...
+
+
+<!-- To do first page add score legend. -->
+<!-- near the font: -->
+<!-- * table of all variants passing minimum score 8. -->
+<!-- * plot guru score per patient instead of cohort. -->
+
+\clearpage
+
+# Methods 
+## Introduction
+
+Sample ID: <span class="kispiblue">XYZ_STUDY_D.XYZ003_DNA</span> was analysed for the clinical diagnosis of phenotype X. 
+Clinical grade sequencing (ISO 15189 accredited) was used to generate whole genome sequence (WGS) data at the Swiss Multi-Omic Center (SMOC) ([SMOC](http://smoc.ethz.ch)). 
+We handled this sensitive clinical data according to established SPHN/BioMedIT guidelines on the sciCORE platform the SwissPedHealth \colorbox{kispiblue!10}{\texttt{momic}} tenant  ([SPHN/BioMedIT](https://sphn.ch/network/projects/biomedit/)).
+The full set of SwissPedHealth pipeline documentation can be found at our [pipedev docs](https://swisspedhealth-pipelinedev.github.io/docs/) homepage.
+The analysis design documents for this specific report can be found at <https://swisspedhealth-pipelinedev.github.io/docs/pages/design_dna_snvindel_v1.html>.
+The pipeline used here is \colorbox{kispiblue!10}{\texttt{Design DNA SNV INDEL v1}} and concerns WGS germline short variant discovery (SNVs + Indels) and interpretation.
+
+## Sequencing and processing
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{./images/misc/V2_1681209631648_99a5905d-7902-4947-824a-952f7359afd4_HIGH_RES.png}
+  \end{center}
+    \label{fig:wgsdata}
+  \caption{Illumina WGS data generation.}
+\end{wrapfigure}
+
+We used Illumina whole genome sequencing (WGS) with TruSeq DNA PCR-free library protocol. Sequencing was performed on NovaSeq 6000, for paired-end  150 bp reads with indexing. We mapped to the human reference genome GRCh38/hg38 assembly ([link to ref docs](https://swisspedhealth-pipelinedev.github.io/docs/pages/ref.html))
+<!-- , using the GCA\_000001405.15\_GRCh38\_no\_alt\_analysis\_set.fna,  -->
+ensuring high accuracy and comprehensive coverage for genomic analysis (figure \ref{fig:wgsdata}).
+The \colorbox{kispiblue!10}{\texttt{Design DNA SNV INDEL v1}} protocol allows for the discovery and interpretation of germline short variants (SNVs and INDELs) from whole genome sequencing data. This protocol includes GATK best practices to process raw sequencing data into a joint cohort gVCF, followed by variant qualification and annotation for clinical and research applications. 
+Key stages include quality control, genome alignment, variant calling, and rigorous filtering to identify disease-associated variants, ensuring that both known and novel genetic determinants are accurately characterized for clinical reporting and genetic research.
+
+\FloatBarrier
+
+## Annotation and interpretation
+
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.80\textwidth]{./images/misc/genetic_report_images_annotation.pdf}
+  \end{center}
+      \label{fig:varanno}
+  \caption{Variant annotation and interpretation.}
+\end{figure}
+
+In our approach to DNA annotation and interpretation, we employ tools such as Variant Effect Predictor (VEP) to systematically incorporate data from roughly 160 genetic databases, aiming to improve the clarity and utility of variant interpretations. Our protocols conform to ACMG/AMP standards, facilitating accurate clinical and research classifications. This methodical application is handled by our
+\colorbox{kispiblue!10}{\texttt{Guru}} software for genomic data to ensure reliable identification of pathogenic variants, grounded in detailed annotation and rigorous analysis (figure \ref{fig:varanno}).
+
+
+\FloatBarrier
+
+
+## Qualifying variants
+
+\begin{wrapfigure}{r}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{./images/misc/genetic_report_images_qv_filter.pdf}
+  \end{center}
+        \label{fig:qv}
+  \caption{Qualifying variants (QV).}
+\end{wrapfigure}
+
+This report relied on qualifying variant filter protocol 
+\colorbox{kispiblue!10}{\texttt{Design QV SNV INDEL v1}} 
+(figure \ref{fig:qv}).
+This is our comprehensive framework for the identification and qualification of SNV and INDEL variants in genomic studies. It uses a flexible approach, incorporating quality control and multiple filtering stages to refine datasets for downstream analysis. The protocol is tailored to accommodate various research needs, balancing stringent filtering for rare disease investigations with broader criteria for complex trait analyses. 
+This methodology ensures the retention of critical variants while maintaining the integrity of the data across diverse study designs.
+Read more about \colorbox{kispiblue!10}{\texttt{Design QV SNV INDEL v1}} here:
+<https://swisspedhealth-pipelinedev.github.io/docs/pages/design_qv_snvindel_v1.html>.
+
+\FloatBarrier
+
+
+## Variant nomenclature \label{variant-nomenclature}
+
+\begin{wrapfigure}{!hl}{0.5\textwidth}
+  \begin{center}
+    \includegraphics[width=0.48\textwidth]{./images/misc/genetic_report_images_variant_descriptor.pdf}
+  \end{center}
+  \label{fig:hgvs}
+  \caption{HGVS Nomenclature with an example variant. The HGVS accession can be used to recall the gene symbol, description, reference genome, etc.}
+\end{wrapfigure}
+
+We use and recommend adherence to nomenclature from the Human Genome Variation Society (HGVS) for reporting all genetic variants in DNA, RNA, and protein (<https://hgvs-nomenclature.org/stable/>)
+(figure \ref{fig:hgvs}). 
+Abbreviated notation (e.g. p.Trp18Ter) should be avoided because it does not give sufficient information to recall a variant due to the major differences between reference genomes, database, and transcripts. 
+The HGVS Nomenclature is an internationally-recognized standard for the description of DNA, RNA, and protein sequence variants. It is used to convey variants in clinical reports and to share variants in publications and databases.
+The HGVS Nomenclature is administered by the HGVS Variant Nomenclature Committee (HVNC) under the auspices of the Human Genome Organization (HUGO).
+
+
+\FloatBarrier
+
+\clearpage
+
+
+## Automated evidence reporting
+
+\begin{wrapfigure}{r}{0.2\textwidth}
+  \begin{center}
+   \includegraphics[width=0.2\textwidth]{./images/misc/DALLE_guru_compress.jpg}
+  \end{center}
+    \label{fig:gurulogo}
+  \caption{Guru package.}
+\end{wrapfigure}
+
+We automate the interpretation of variants by algorithmically assessing numerous evidence criteria including the use of ACMG standards and guidelines.
+Extensive annotation is applied during our genomics analysis.
+Interpretation of genetic determinants of disease is based on many evidence sources.
+One important source of interpretation comes from the
+_Standards and guidelines for the interpretation of sequence variants: a joint consensus recommendation of the American College of Medical Genetics and Genomics and the Association for Molecular Pathology_, Richards et al.
+[^richards2015standards].
+See also Li et al., 2017 [^li2017standards] and Riggs et al., 2020 [^riggs2020technical].
+The following tables are provided as they appear in the initial steps of our filtering protocol for the addition of ACMG-standardised labels to candidate causal variants.
+For reference, alternative public implementations of ACMG guidelines can be found in 
+Li et al., 2017
+[^li2017intervar] and
+Xavier et al., 2019
+[^xavier2019tapes];
+please note these tools have not implemented here nor is any assertion of their quality offered.
+Examples of effective variant filtering and expected candidate variant yield in studies of rare human disease are provided by
+Pedersen et al., 2021
+[^pedersen2021effective].
+Tavtigian et al. 2020 [^tavtigian2020fitting] provide point-based variant classification categories.
+<!-- For reference, alternative public implementations of ACMG guidelines can be found in [Li & Wang, 2017](#ref3) and [Xavier et al., 2019](#ref4); please note these tools have not been implemented here nor is any assertion of their quality offered. Examples of effective variant filtering and expected candidate variant yield in studies of rare human disease are provided by [Pedersen et al., 2021](#ref5). -->
+We use the evaluation of in silico predictors from Varsome. 
+Wilcox et al., 2022 [^wilcox2022evaluating] also discusses such uses.
+
+
+```{r results='asis', echo=FALSE}
+# Legend
+# Define the categories and their corresponding point ranges
+categories <- c("Pathogenic", "Likely Pathogenic", "Uncertain", "Likely Benign", "Benign")
+point_ranges <- c("≥10", "6 to 9", "0 to 5", "-1 to -6", "≤ -7")
+
+# cat("\\begin{wraptable}{!hr}{0.5\\textwidth}\n")
+cat("\\begin{table}[h]\n")
+cat("\\centering")
+cat("\\label{tab:acmg_scoring}")
+cat("\\caption{Guru score. Point-based variant classification categories as per Tavtigian et al. 2020, based on standardised rules according to ACMG and others. 
+For further reading \\href{https://swisspedhealth-pipelinedev.github.io/docs/pages/acmg_criteria_table_main.html}{see our documentation page}.}\n")
+cat("\\begin{tabular}{ll}\n")
+cat("\\toprule\n")
+cat("Category & Point ranges \\\\\n")
+cat("\\midrule\n")
+
+# Loop through the categories and point ranges
+for (i in seq_along(categories)) {
+  color_start <- get_score_color_by_range(point_ranges[i])
+  color_end <- "}}"
+
+  # Insert each category and its colored point range into the table
+  cat(paste(color_start, point_ranges[i], color_end, "&", categories[i], "\\\\\n", sep=""))
+}
+
+cat("\\bottomrule\n")
+cat("\\end{tabular}\n")
+cat("\\end{table}\n")
+# cat("\\end{wraptable}\n")
+# cat("\\end{wrapfigure}\n")
+```
+
+
+
+```{r results='asis', echo=FALSE}
+# Legend
+# Define impact categories and their descriptions
+impacts <- c("HIGH", "MODERATE", "LOW", "MODIFIER")
+descriptions <- c(
+  "The variant is assumed to have high (disruptive) impact in the protein, probably causing protein truncation, loss of function or triggering nonsense mediated decay.",
+  "A non-disruptive variant that might change protein effectiveness.",
+  "A variant that is assumed to be mostly harmless or unlikely to change protein behaviour.",
+  "Usually non-coding variants or variants affecting non-coding genes, where predictions are difficult or there is no evidence of impact."
+)
+
+# cat("\\begin{table}[h]\n\\centering\n")
+cat("\\begin{wraptable}{!hr}{1.0\\textwidth}\n\\centering\n")
+cat("\\label{tab:vep_cons}")
+cat("\\caption{Impact. The Ensembl variant effect predictor definition of severity from low to high condensed to categories of variant impact. For more reading see \\href{https://grch37.ensembl.org/info/genome/variation/prediction/predicted_data.html}{Ensembl Variation - Calculated variant consequences}.}\n")
+cat("\\begin{tabular}{p{4cm}p{10cm}}\n")  # Adjust column widths as needed
+cat("\\toprule\n")
+cat("Impact Level & Description \\\\\n")
+cat("\\midrule\n")
+
+# Loop through the impact categories
+for (i in seq_along(impacts)) {
+  color_start <- get_impact_color(impacts[i])
+  color_end <- "}}"
+
+  # Insert each impact and its color-coded description into the table
+  cat(paste0(color_start, impacts[i], color_end, "&", descriptions[i], "\\\\\n", sep=""))
+}
+
+cat("\\bottomrule\n")
+cat("\\end{tabular}\n")
+cat("\\end{wraptable}\n")
+
+```
+
+
+\clearpage
+
+The set of consequence terms, defined by the [Sequence Ontology (SO)](http://www.sequenceontology.org/), that can be currently assigned to each combination of an allele and a transcript is shown in figure \ref{fig:vepcons}
+([see ensembl for more](https://grch37.ensembl.org/info/genome/variation/prediction/predicted_data.html)).
+Note that each allele of each variant may have a different effect in different transcripts.
+Missense variants have further annotation on their effect on the protein function, using a number of algorithms, [including all defaults available from VEP](https://grch37.ensembl.org/info/genome/variation/prediction/protein_function.html).
+ 
+\begin{figure}
+  \begin{center}
+    \includegraphics[width=0.60\textwidth]{./images/misc/vep_consequences.pdf}
+  \end{center}
+      \label{fig:vepcons}
+  \caption{VEP consequences.}
+\end{figure}
+
+\clearpage
+
+# Technical report
+
+## Top ranked causal candidate variants
+
+To do:
+
+* Done - Guru geneIllustrate
+* Done - Genetic ancestry
+* Reformat the summary report variants in a condensed format and include more
+metadata.
+* This section should include the result and reasons why the variants were flagged
+for reporting.
+* Inlcude the summary report with addition of all of the flags triggered, the
+observation that cuases the tirgger: guru score, pathogenic on clinvar,
+pathogenicity engine results, and evidence figures.
+* Guru AutoDestructR - swap the static example with linked result
+* GuruUniprotR - get protein pathway from ProteoMCLustR
+* Guru GetDiscussion - link to module result
+* Link to the databases including minimal set of: gnomad, uniprot, ensembl, omim.
+
+
+## Guru score plots
+
+## Guru gene illustrate
+
+## Data
+The data for this analysis is included in the internal stable release
+\colorbox{kispiblue!10}{\texttt{Design DNA SNV INDEL v1 release}}. Documentation about this release [can be found here](https://swisspedhealth-pipelinedev.github.io/docs/pages/design_dna_snvindel_v1_release.html).
+
+## variant 2 
+Read about the ACMG classification [scoring system and protocol linked here](https://swisspedhealth-pipelinedev.github.io/docs/pages/acmg_criteria_table_main.html).
+
+<!-- <div style="float: center; width: 60%;"> -->
+<!--   <img src="./images/misc/VEP_consequences.pdf" alt="VEP Consequences" style="width: 100%;"/> -->
+<!-- </div> -->
+
+
+```{r results='asis', echo=FALSE}
+# library(DT)
+# datatable(dt_selected_sub, options = list(
+#   dom = 'Bfrtip',
+#   buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+#   lengthMenu = list(c(10, 25, 50, -1), c('10 rows', '25 rows', '50 rows', 'All')),
+#   initComplete = JS("function(settings, json) { $(this.api().table().header()).css({'background-color': '#000', 'color': '#fff'}); }")
+# ))
+```
+
+## Genetic ancestry
+In figure \@ref(fig:plot-custom-pca), we illustrate the principal component analysis (PCA) for this patient within a global context. This PCA biplot visualises the genetic positioning of the patient (highlighted) relative to cohort cases from Switzerland and over 2500 worldwide controls. These controls reflect an extensive set of reference databases that we use to facilitate the identification of causal genetic variants and the filtering of common variants, enhancing the robustness of our WGS analysis. The quality of our analysis is directly linked to the comprehensiveness of our reference data. By comparing the patient's genetic variance against well-curated global and local populations, we can better understand their genetic similarity to other individuals in specific cohorts, which is crucial for accurate genetic interpretation and personalised healthcare strategies. For more information see [our documentation page here](https://swisspedhealth-pipelinedev.github.io/docs/pages/pca_biplot_1kg.html).
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+# source("pca.R")
+```
+
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+data_source <- paste0(case_out, "plot_PCA_biplot_swisspedhealth_1kg_singlecase_", singlecase_ID, ".pdf")
+cap_source <- paste("Data source:",  "\\newline", sprintf("\\texttt{%s}", gsub("_", "\\_", data_source, fixed = TRUE)))
+cap_text <- paste("Variant count in gVCF format data duing the stages of `Design QV SNV INDEL v1`.", cap_source)
+```
+```{r plot-custom-pca, message=FALSE, echo=FALSE, warning=FALSE, fig.align='center', fig.cap=cap_text, out.width='0.99\\linewidth'}
+
+# knitr::include_graphics(data_source)
+print(p_1kg_swisspedhealth_singlecase)
+```
+
+## 3D Structure Viewer
+To do: forward pdb from AutoDesrtuctR.
+
+<!-- <div style="height: 400px; width: 100%; position: relative;" class='viewer_3Dmoljs' data-pdb='1YCR' data-backgroundalpha='0' data-style='cartoon:color=spectrum' data-surface='opacity:0.5;color:white' data-spin='axis:y;speed:0.1'></div> -->
+
+
+## Causal variant evidence interpretation
+
+The analysis of variant interpretation performed by ACMGuru is summarised from the following evidence sources:
+
+Figure: 
+<span class="kispiblue">**AutoDestructR Single Case**</span> - This figure includes the use of gene structure and functional data including sources from UniProt, protein structure data from PDB and AlphaFold. 
+
+```{r AutoDestructR-single-case, fig.show='hold', out.width='25%', echo=FALSE}
+knitr::include_graphics(c("./images/acmguru/AutoDestructR_singlecase_1.png", "./images/acmguru/AutoDestructR_singlecase_2.png"))
+```
+
+\clearpage
+\FloatBarrier
+
+# Methods
+## Pipeline introduction
+
+This protocol is featured in the pre-prints 
+[^Lawless2025qv],
+[^Lawless2025design],
+[^Lawless2025main].
+<!-- The pipeline is illustrated in figure \ref{fig:qv_pipeline_vcurrent}. -->
+<!-- The study data flow is shown in figure \ref{fig:swisspedhealth_gemomics_plan}. -->
+The pipeline is illustrated in figure \@ref(fig:plot-qv-pipeline-vcurrent).
+The study data flow is shown in figure \@ref(fig:plot-swisspedhealth-gemomics-plan).
+The single-case report that you are currently reading comes from the SNV/INDEL pipeline
+\colorbox{colorSUNSET1!30}{\texttt{pipeline DNA SNV INDEL v1}}.
+It focuses on data from one patient from the end-point module 
+\colorbox{kispiblue!30}{\texttt{traditional clinical genetics}},
+as illustrated in Figure 
+\@ref(fig:plot-custom-pca)
+(generalised in figures 
+\ref{fig:varanno} - \ref{fig:hgvs}
+). 
+This module is one part of a comprehensive
+study that encompasses several stages, each contributing uniquely to the overall analysis. This broader study involves a detailed, multi-part analysis aimed at achieving two primary objectives: (1) identifying new cohort-level genes associated with disease and (2) confirming known disease-causing results at the single-case level. To facilitate this, we employ a series of Quality Verification (QV) protocols, designed to progressively refine datasets to meet specific analytical requirements at various stages of the study. These analyses integrate multiple scenarios, ensuring a robust examination of the data. Specifically, the complete study includes the following components, merged to support a thorough investigation:
+\colorbox{kispiblue!30}{\texttt{QV SNV/INDEL}} + 
+\colorbox{kispiblue!30}{\texttt{QV CNV}} + 
+\colorbox{kispiblue!30}{\texttt{QV structural variation}} + 
+\colorbox{kispiblue!30}{\texttt{QV rare disease known}} + 
+\colorbox{kispiblue!30}{\texttt{QV statistical association QC}}.
+Each of these components plays a critical role in our multi-faceted analysis strategy, aimed at uncovering novel genetic associations
+and validating known markers of disease.
+
+## Qualifying variants protocol
+
+This analysis focused on a SNV/INDEL pipeline 
+\colorbox{colorSUNSET1!30}{\texttt{pipeline DNA SNV INDEL v1}}
+using two QV sets named 
+\colorbox{colorSUNSET2!60}{\texttt{QV SNV INDEL v1}} and
+\colorbox{colorSUNSET2!60}{\texttt{QV SNV INDEL v2}}.
+as generalised in figure
+\ref{fig:qv}.
+A cohort of patient WGS data was analysed to identify genetic determinants for the clinical diagnosis of known and unknown phenotypes. 
+This pipeline is concerned with WGS germline short variant discovery (SNVs + Indels) and interpretation.
+\underline{First, a flexible QV set (v1)} was used for cohort-level statistical genomics and \underline{second a rare disease QV set (v2)} was used for single-case analysis.
+(\textbf{1}) Data was processed with the 
+\colorbox{colorSUNSET1!30}{\texttt{pipeline DNA SNV INDEL v1}} pipeline, which implements
+(\textbf{a}) \colorbox{colorSUNSET2!60}{\texttt{QV SNV INDEL v1}} criteria, resulting in the prepared dataset
+\colorbox{colorSUNSET3!30}{\texttt{dataset DNA SNV INDEL v1}}.
+(\textbf{b}) The dataset was subsequently analysed in combination with other modules including 
+\colorbox{colorSUNSET4!30}{\texttt{PCA SNV INDEL v1}} and 
+\colorbox{colorSUNSET5!30}{\texttt{statistical genomics v1}} to complete statistical analysis on a joint cohort.
+(\textbf{2}) Next, 
+ the prepared dataset (from step 1a)
+\colorbox{colorSUNSET3!30}{\texttt{Dataset DNA SNV INDEL v1}} was processed further with more strict filtering using
+\colorbox{colorSUNSET2!60}{\texttt{QV SNV INDEL v2}} to identify previously known causal genetic variants for each patient based on disease-gene panel and curated evidence sources, resulting in \colorbox{colorSUNSET3!30}{\texttt{Dataset DNA SNV INDEL v2}} and final interpretation in
+\colorbox{colorSUNSET5!30}{\texttt{single case report SNV INDEL v1}}.
+
+
+\begin{tcolorbox}[
+    % breakable,  % Allows the box to split over pages
+    colback=white!0,  % No background color (fully transparent)
+    colframe=black,  % Black border color
+    boxrule=1pt,  % Width of the border
+    arc=1mm,  % Radius of the corner rounding
+    outer arc=1mm,
+    title=\textbf{Example diagrammatic representation}
+]
+
+\dirtree{%
+.1 \colorbox{colorSUNSET1!30}{\texttt{pipeline DNA SNV INDEL v1}}.
+.2 Flexible QV criteria.
+.3 \colorbox{colorSUNSET2!60}{\texttt{QV SNV INDEL v1}} (-> \colorbox{colorSUNSET3!30}{\texttt{dataset DNA SNV INDEL v1}}).
+.4 \colorbox{colorSUNSET4!30}{\texttt{PCA SNV INDEL v1}}.
+.4 \colorbox{colorSUNSET5!30}{\texttt{statistical genomics v1}} -> Result 1.
+.3 \colorbox{colorSUNSET3!30}{\texttt{dataset DNA SNV INDEL v1}}.
+.4 Rare disease QV criteria.
+.5 \colorbox{colorSUNSET2!60}{\texttt{QV SNV INDEL v2}} (-> \colorbox{colorSUNSET3!30}{\texttt{dataset DNA SNV INDEL v2}}).
+.6 \colorbox{colorSUNSET5!30}{\texttt{single case report SNV INDEL v1}} -> Result 2.
+.3 Joint analysis output.
+}
+
+Joint analysis output from:\\
+Result 1 = Cohort-level association signal (e.g. variant P-value). \\
+Result 2 = Single variant for single patient.
+\end{tcolorbox}
+
+<!-- \begin{figure} -->
+<!--   \begin{center} -->
+<!--     \includegraphics[width=1\textwidth]{./images/misc/qv_pipeline_vcurrent.pdf} -->
+<!--   \end{center} -->
+<!--     \label{fig:qv_pipeline_vcurrent} -->
+<!--   \caption{Caption.} -->
+<!-- \end{figure} -->
+
+<!-- \begin{wrapfigure}{r}{0.5\textwidth} -->
+<!--   \begin{center} -->
+<!--     \includegraphics[width=0.50\textwidth]{./images/misc/swisspedhealth_gemomics_plan.pdf} -->
+<!--   \end{center} -->
+<!--     \label{fig:swisspedhealth_gemomics_plan} -->
+<!--   \caption{Caption.} -->
+<!-- \end{wrapfigure} -->
+
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+data_source <- paste0("./images/misc/qv_pipeline_vcurrent.pdf")
+cap_source <- paste("Data source:",  "\\newline", sprintf("\\texttt{%s}", gsub("_", "\\_", data_source, fixed = TRUE)))
+cap_text <- paste("Caption.", cap_source)
+```
+```{r plot-qv-pipeline-vcurrent, message=FALSE, echo=FALSE, warning=FALSE, fig.align='center', fig.cap=cap_text, out.width='0.99\\linewidth'}
+
+knitr::include_graphics(data_source)
+```
+
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE}
+data_source <- paste0("./images/misc/swisspedhealth_gemomics_plan.pdf")
+cap_source <- paste("Data source:",  "\\newline", sprintf("\\texttt{%s}", gsub("_", "\\_", data_source, fixed = TRUE)))
+cap_text <- paste("Caption.", cap_source)
+```
+```{r plot-swisspedhealth-gemomics-plan, message=FALSE, echo=FALSE, warning=FALSE, fig.align='center', fig.cap=cap_text, out.width='0.99\\linewidth'}
+
+knitr::include_graphics(data_source)
+```
+
+\clearpage
+\FloatBarrier
+
+# Links
+
+* Swiss Multi-Omic Center (SMOC) <http://smoc.ethz.ch>
+* SPHN/BioMedIT <https://sphn.ch/network/projects/biomedit/>
+* SwissPedHealth pipe-dev homepage <https://swisspedhealth-pipelinedev.github.io/docs/>
+* \colorbox{kispiblue!10}{\texttt{Design DNA SNV INDEL v1}} <https://swisspedhealth-pipelinedev.github.io/docs/pages/design_dna_snvindel_v1.html>
+* \colorbox{kispiblue!10}{\texttt{Design QV SNV INDEL v1}} 
+<https://swisspedhealth-pipelinedev.github.io/docs/pages/design_qv_snvindel_v1.html>
+* \colorbox{kispiblue!10}{\texttt{Design statistical genomics v1}} <https://swisspedhealth-pipelinedev.github.io/docs/pages/design_statistical_genomics_v1.html>
+* \colorbox{kispiblue!10}{\texttt{Design PCA SNV INDEL v1}} <https://swisspedhealth-pipelinedev.github.io/docs/pages/design_PCA_SNV_INDEL_V1.html>
+* \colorbox{kispiblue!10}{\texttt{Design DNA SNV INDEL v1 release}} <https://swisspedhealth-pipelinedev.github.io/docs/pages/design_dna_snvindel_v1_release.html>
+
+# References
+
+1. Figure 1. Samara Ona via BioRender template Next Generation Sequencing (Illumina).
+1. Figure 2 and 4 based on similar illustrations from Sophia Genetics. 
+
+[^richards2015standards]: Richards, S. et al., 2015. Standards and guidelines for the interpretation of sequence variants: a joint consensus recommendation of the American College of Medical Genetics and Genomics and the Association for Molecular Pathology. _Genetics in Medicine_, 17(5), pp.405–423. DOI: [10.1038/gim2015.30](https://www.gimjournal.org/article/S1098-3600(21)03031-8/fulltext).
+
+[^li2017standards]: Li, M.M. et al., 2017. Standards and guidelines for the interpretation and reporting of sequence variants in cancer: a joint consensus recommendation of the Association for Molecular Pathology, American Society of Clinical Oncology, and College of American Pathologists. _The Journal of Molecular Diagnostics_, 19(1), pp.4–23. DOI: [10.1016/j.jmoldx.2016.10.002](https://doi.org/10.1016/j.jmoldx.2016.10.002).
+
+[^riggs2020technical]: Riggs, E.R. et al., 2020. Technical standards for the interpretation and reporting of constitutional copy-number variants: a joint consensus recommendation of the American College of Medical Genetics and Genomics (ACMGe and the Clinical Genome Resource (ClinGen). _Genetics in Medicine_, 22(2), pp.245–257. DOI: [10.1038/s41436-019-0686-8](https://doi.org/10.1038/s41436-019-0686-8).
+
+[^tavtigian2020fitting]: Tavtigian SV, Harrison SM, Boucher KM, Biesecker LG. (2020). Fitting a naturally scaled point system to the ACMG/AMP variant classification guidelines. *Human Mutation*, 41, 1734–1737. [https://doi.org/10.1002/humu.24088](https://doi.org/10.1002/humu.24088)
+
+[^wilcox2022evaluating]: Emma H. Wilcox, Mahdi Sarmady, Bryan Wulf, Matt W. Wright, Heidi L. Rehm, Leslie G. Biesecker, Ahmad N. Abou Tayoun. (2022). Evaluating the impact of in silico predictors on clinical variant classification. *Genetics in Medicine*, Volume 24, Issue 4, Pages 924-930, ISSN 1098-3600, [https://doi.org/10.1016/j.gim.2021.11.018](https://doi.org/10.1016/j.gim.2021.11.018).
+
+[^pedersen2021effective]: Pedersen, B.S. et al., 2021. Effective variant filtering and expected candidate variant yield in studies of rare human disease. _NPJ Genomic Medicine_, 6(1), pp.1–8. DOI: [10.1038/s41525-021-00227-3](https://doi.org/10.1038/s41525-021-00227-3).
+
+[^li2017intervar]: Li, Q. and Wang, K., 2017. InterVar: clinical interpretation of genetic variants by the 2015 ACMG-AMP guidelines. _The American Journal of Human Genetics_, 100(2), pp.267–280. DOI: [10.1016/j.ajhg.2017.01.004](https://doi.org/10.1016/j.ajhg.2016.12.00://doi.org/10.1016/j.ajhg.2017.01.004).
+
+[^xavier2019tapes]: Xavier, A. et al., 2019. TAPES: A tool for assessment and prioritisation in exome studies. _PLoS Computational Biology_, 15(10), e1007453. DOI: [10.1371/journal.pcbi.1007453](https://doi.org/10.1371/journal.pcbi.1007453).
+
+[^Lawless2025qv]: Lawless, et al., 2025. (QV protocol) Conceptualising qualifying variants for genomic analysis. Unpublished. DOI: .
+
+[^Lawless2025design]: Lawless, et al., 2025. (Genomics design) Pediatric precision medicine with SwissPedHealth’s genomics programme. DOI: .
+
+[^Lawless2025main]: Lawless, et al., 2025. (Genomics benchmark result) Advancing pediatric precision medicine with SwissPedHealth’s
+integrated databases and automated genomic pipelines. Unpublished. DOI: .
+
+
+# About this document
+
+Designed and run from within the Department of Intensive Care and Neonatology, University Children’s Hospital Zürich
+(Intensivmedizin & Neonatologie, Universitäts-Kinderspital Zürich), UZH.
+Data for this analysis resides in BioMedIT sciCORE momic. 
+Publication-ready figures are linked in figure legends as "data source".
+The joint cohort datasets for further analysis can be found by following the protocol documentation, namely: \colorbox{kispiblue!10}{\texttt{Design DNA SNV INDEL v1}} and
+\colorbox{kispiblue!10}{\texttt{Design QV SNV INDEL v1}}. 
+
+
+
+<!-- IBM plex typography. -->
+
+
+<!-- Illustration & Photography -->
+<!-- NASA January, 1976 - Graphics Standards Manual -->
+<!-- Use of illustration & photography as either story telling or major graphic elements is a key in the design of NASA publications. -->
+<!-- Simplicity , appropriateness and strength of composition is important in the successful handling of these elements, not technique alone as is sometimes believed and practiced. -->
+<!-- The absence of detail and deliniation , or symbolic quality , in a cover illustration or photograph provokes interest and stimulates the reader to go to the inside of the publication for more information. -->
+<!-- In the case of a technical diagram or story-telling illustration , correct detailing is absolutely necessary to accomplish the desired communication . -->
+<!-- Always analyze the illustration in terms of the communication task it must accomplish . Then determine what technique to use , how realistic it must be , etc . Where possible , within the restrictions of budget and available material , keep your options open and utilize the best available photography and illustration talent . Make certain they are fully briefed on the task you are assigning to them and that they understand the broad communication goal of the project before beginning their work. -->
+
+
+
+<!-- \begin{minipage}[t]{0.5\textwidth} -->
+<!-- First Column Goodies.\\ -->
+<!-- More First Column Goodies.\\ -->
+<!-- \end{minipage} -->
+<!-- \begin{minipage}[t]{0.5\textwidth} -->
+<!-- Second Column Goodies.\\ -->
+<!-- More Second Column Goodies.\\ -->
+<!-- \end{minipage} -->
+
