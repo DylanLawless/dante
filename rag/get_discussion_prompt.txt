@@ -1,0 +1,22 @@
+We want to write a single paragraph to support table 1. 
+This final result will be in latex format with the section heading 
+\section{Biological function summary}.
+
+Here is a genetic variant for 1 patient in table 1 as detected by `GuRu`.
+Based on the ACMG.score we say that this variant is pathogenic. 
+
+Table 1:
+```
+sample.id	pathway_id	SYMBOL	Variant.GRCh38	HGVSp	HGVSc	Consequence	IMPACT	genotype	Inheritance	gnomAD_AF	ACMG.score
+261	22	LILRA1	chr19:54596470_T/C	ENSP00000251372.3:p.Ser414Pro	ENST00000251372.8:c.1240T>C	missense_variant	MODERATE	1	NA	0	8```
+
+
+
+Here is the get_discussion output from `GuRu` for this gene:
+
+```
+SYMBOL	Protein.names	Gene.Ontology..molecular.function.	Function..CC.
+LILRA1	Leukocyte immunoglobulin-like receptor subfamily A member 1 (CD85 antigen-like family member I) (Leukocyte immunoglobulin-like receptor 6) (LIR-6) (CD antigen CD85i)	antigen binding [GO:0003823]; inhibitory MHC class I receptor activity [GO:0032396]; transmembrane signaling receptor activity [GO:0004888]	FUNCTION: May act as receptor for class I MHC antigens.
+```
+
+We are writing a single paragraph to support table 1 by describing the variant information and the get_discussion information about this variant in this gene to explain why it might be causal for disease by understanding the biological function.
