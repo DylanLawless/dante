@@ -1,6 +1,5 @@
 library(rmarkdown)
 library(dplyr)
-library(dplyr)
 library(knitr)
 library(stringr)
 library(digest)
@@ -34,6 +33,17 @@ file_list <- list.files(path = data_path, pattern = "ACMGuru_singlecase_df_repor
 dt_selected_sub <- file_list %>%
   lapply(readRDS) %>%
   bind_rows()
+
+# >5 
+# 
+# >9
+# 
+# 
+# dt_selected_sub <- dt_selected_sub |> filter(ACMG_total_score > 9)
+# 
+# data.table::fwrite(dt_selected_sub, file="../../scicore_mirror/data/acmguru_data_20250107/ACMGuru_singlecase_df_report_main_text_v1_momic_samplecount_180_all_chr.csv", sep = ",")
+# 
+
 
 # To print reports in order of highest rank guru score
 # Step 1: Group by 'sample.id'
