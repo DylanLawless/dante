@@ -56,7 +56,7 @@ resp_process(resp, "text")
 # Real world application ----
 
 # Predefined components
-description_text <- "You are writing the variant interpretation step of a clinical genetics report in LaTeX format. It must be clear and succinct and therefore have no unrelated content so that the reader can understand. The is important to report the provided factual evidence correctly. The final output should start and end with the machine-readable string Summary_start Summary_end so that we can format automatically. This final result will be in LaTeX format with the section heading \\section{Evidence interpretation summary}."
+description_text <- "You are writing the variant interpretation step of a clinical genetics report in LaTeX format. It must be clear and succinct and therefore have no unrelated content so that the reader can understand. The is important to report the provided factual evidence correctly. This final result will be in LaTeX format with the section heading \\section{Evidence interpretation summary}."
 
 # Table data and gene discussion information could be sourced from external data handling
 variant_info <- "Here is a genetic variant for 1 patient in table 1 as detected by GuRu. Based on the ACMG.score and the numerous complex scoring functions of GuRu we say that this variant is pathogenic."
