@@ -1,171 +1,19 @@
 library(dplyr)
 
 output_dir <- "../data/"
+custom_variable <- ""
+df_report_discussion <- readr::read_tsv(file=(paste0(output_dir, "get_discussion/df_report_discussion_", custom_variable, ".tsv")))
 
 df_mim <- data.table::fread( file="../../scicore_mirror/data/acmguru_data_20250107/ACMGuru_singlecase_df_report_v1_momic_samplecount_180_all_chr_rank1_mim.csv", sep = ",")
 
+# run server -----
 # install.packages("ollamar")
 library(ollamar)
-
-# Note: You should have at least 8 GB of RAM available to run the 7B models, 16 GB to run the 13B models, and 32 GB to run the 33B models.
-
-#' @article{Lin2025JOSS,
-#' 	author = {Lin, Hause and Safi, Tawab}, 
-#' 	title = {ollamar: An R package for running large language models}, 
-#' 	journal = {Journal of Open Source Software}, 
-#' 	volume = {10}, 
-#' 	number = {105}, 
-#' 	pages = {7211}, 
-#' 	year = {2025},
-#' 	month = jan,
-#' 	volume = {10}, 
-#' 	doi = {10.21105/joss.07211},
-#' 	url = {https://joss.theoj.org/papers/10.21105/joss.07211}
-#' }
-
-
-# get discussion ----
-
-# import ----
-#if (!requireNamespace("BiocManager", quietly = TRUE))
-#  install.packages("BiocManager")
-#BiocManager::install("rtracklayer")
-library(rtracklayer)
-
-# uniprot to PDB ----
-# if (!requireNamespace("BiocManager", quietly = TRUE))
-#   install.packages("BiocManager")
-# BiocManager::install("biomaRt")
-
-library(biomaRt)
-
-# listMarts()
-# ensembl = useMart("ensembl")
-# listDatasets(ensembl)
-# ensembl = useDataset('hsapiens_gene_ensembl',mart=ensembl)
-
-# 
-# uniprotR ----
-# install.packages('UniprotR')
-# if (!require("BiocManager", quietly = TRUE))
-# install.packages("BiocManager")
-# BiocManager::install("UniprotR", force = TRUE)
-library(UniprotR)
-
-# Homo sapiens (Human) [9606] Consists of 204,185 entries
-
-# Data import ----
-df_uniprot <- readGFF("../ref/uniprot/uniprot-filtered-organism%3A%22Homo+sapiens+%28Human%29+%5B9606%5D%22.gff")
-# df_uniprot <- readGFF("../data/uniprot_HUMAN_Q2TBE0_CWF19L2.gff")
-df_uniprot_meta <- read.csv("../ref/uniprot/uniprot-filtered-organism%3A%22Homo+sapiens+%28Human%29+%5B9606%5D%22.tab", sep="\t")
-
-# colnames(df)[colnames(df) == 'oldName'] <- 'newName'
-colnames(df_uniprot_meta)[colnames(df_uniprot_meta) == 'Entry'] <- 'seqid'
-
-df_uniprot$seqid
-df_uniprot_meta$seqid
-df_uniprot_meta$Gene.names
-
-# Separate the Gene.names column where names are separated by space
-df_uniprot_meta_tidy <- df_uniprot_meta %>% 
-	tidyr::separate_rows(Gene.names, sep = " ")
-
-# Rename Gene.names to SYMBOL
-colnames(df_uniprot_meta_tidy)[colnames(df_uniprot_meta_tidy) == 'Gene.names'] <- 'SYMBOL'
-
-# get gene list ----
-
-gene_list <- df_mim$SYMBOL |> unique()
-
-df_uniprot_meta_tidy_genes <- 
-	df_uniprot_meta_tidy |> 
-	filter(SYMBOL %in% gene_list) |>
-	filter(Status == "reviewed")
-
-df_uniprot_meta_tidy <- df_uniprot_meta_tidy_genes
-
-rm(df_uniprot, df_uniprot_meta_tidy_genes, df_uniprot_meta)
-gc()
-
-Accessions <- df_uniprot_meta_tidy$seqid 
-
-#Get Taxonomy Information 
-# TaxaObj <- GetNamesTaxa(Accessions)
-# saveRDS(TaxaObj, file=paste(output_dir, "ontology_taxa/TaxaObj.Rds", sep = ""))
-
-#Get Gene ontolgy Information 
-# GeneOntologyObj <- GetProteinGOInfo(Accessions)
-# saveRDS(GeneOntologyObj, file=paste(output_dir, "ontology_taxa/GeneOntologyObj.Rds", sep = ""))
-
-# GetProteinFunction
-# ProteinFunction <- GetProteinFunction(Accessions)
-# saveRDS(ProteinFunction, file=paste(output_dir, "ontology_taxa/ProteinFunction.Rds", sep = ""))
-
-# load local copy
-TaxaObj <- readRDS(file=paste(output_dir, "ontology_taxa/TaxaObj.Rds", sep = ""))
-GeneOntologyObj <- readRDS(file=paste(output_dir, "ontology_taxa/GeneOntologyObj.Rds", sep = ""))
-ProteinFunction <- readRDS(file=paste(output_dir, "ontology_taxa/ProteinFunction.Rds", sep = ""))
-
-# get discussion ----
-names(GeneOntologyObj)
-names(TaxaObj)
-names(ProteinFunction)
-# GeneOntologyObj[2:10,4]
-
-GeneOntologyObj$seqid  <- rownames(GeneOntologyObj)
-TaxaObj$seqid  <- rownames(TaxaObj)
-ProteinFunction$seqid  <- rownames(ProteinFunction)
-
-data_discussion <- merge(GeneOntologyObj, TaxaObj)
-data_discussion <- merge(data_discussion, ProteinFunction)
-
-# represents top hits 
-df_mim_seqid <- df_uniprot_meta_tidy |> dplyr::select(SYMBOL, seqid)
-df_report <- merge(df_mim,df_mim_seqid )
-data_discussion <- merge(df_report, data_discussion, by = "seqid")
-
-df_report_discussion <-
-	# df_report_grouped_grouped_df_max_GO_taxa_funct |>
-	data_discussion |>
-	dplyr::select(SYMBOL,
-								Protein.names,
-								"Gene.Ontology..molecular.function.",
-								"Function..CC."
-	) |>
-	unique()
-
-custom_variable <- ""
-
-readr::write_tsv(df_report_discussion, file=(paste0(output_dir, "get_discussion/df_report_discussion_", custom_variable, ".tsv")))
-
-
-
-
-
-
-# 
-# write.csv(df_report_discussion, file=(paste0("../../data/ACMGuru_post_ppi/df_report_discussion_", paste(geneset_MCL_ID, collapse="_"), ".csv")),
-# 					row.names = FALSE)
-# 
-# 
-
-# example use ----
-test_connection()  # test connection to Ollama server
-# if you see "Ollama local server not running or wrong server," Ollama app/server isn't running
+test_connection()
 list_models()
 
 # Real world application ----
-
-data <- df_mim |> slice(1)
-
-# Predefined components
-description_text <- "You are writing the variant interpretation step of a clinical genetics report in LaTeX format. It must be clear and succinct and therefore have no unrelated content so that the reader can understand. The is important to report the provided factual evidence correctly. This final result will be in LaTeX format with the section heading \\section{Evidence interpretation summary}."
-
-# Table data and gene discussion information could be sourced from external data handling
-variant_info <- "Here is a genetic variant for 1 patient in table 1 as detected by GuRu. Based on the ACMG.score and the numerous complex scoring functions of GuRu we say that this variant is pathogenic."
-
-table_1 <- "Table 1: sample.id pathway_id SYMBOL Variant.GRCh38 HGVSp HGVSc Consequence IMPACT genotype Inheritance gnomAD_AF ACMG.score 261 22 LILRA1 chr19:54596470_T/C ENSP00000251372.3:p.Ser414Pro ENST00000251372.8:c.1240T>C missense_variant MODERATE 1 NA 0 8"
-
+data <- df_mim |> dplyr::slice(1)
 
 table_1 <- data |> dplyr::select(
 "sample.id",
@@ -176,52 +24,65 @@ table_1 <- data |> dplyr::select(
 "HGVSc",
 "Consequence",
 "IMPACT",
-"genotype",
+# "genotype",
 "gnomAD_AF",
-"mim_morbid_description")  %>%
-	mutate(across(everything(), as.character)) %>%
-	summarise(across(everything(), ~ paste0(names(.), ": ", .))) %>%
-	tidyr::unite("table_string", sep = " ")
+"mim_morbid_description") 
 
-print(table_1$table_string)
+table_1 <- paste(names(table_1), table_1[1, ], sep=": ", collapse=". ")
+class(table_1)
+intro_text <- "Here is the variant interpretation output from GuRu:"
+table_1 <- paste(intro_text, table_1)
 
+# Print the combined text
+print(table_1)
 
-print(table_1$table_string)
+gene_discussion <- df_report_discussion %>% dplyr::filter(SYMBOL %in% data$SYMBOL) 
+gene_discussion <- paste(names(gene_discussion), gene_discussion[1, ], sep=": ", collapse=". ")
 
-gene_discussion <- df_report_discussion |> filter(SYMBOL %in% data$SYMBOL)
+intro_text2 <- "Here is the get_discussion output from GuRu:"
+table_2 <- paste(intro_text2, gene_discussion)
 
-gene_discussion <- "Here is the get_discussion output from GuRu for this gene: SYMBOL Protein.names Gene.Ontology..molecular.function. Function..CC. LILRA1 Leukocyte immunoglobulin-like receptor subfamily A member 1 (CD85 antigen-like family member I) (Leukocyte immunoglobulin-like receptor 6) (LIR-6) (CD antigen CD85i) antigen binding [GO:0003823]; inhibitory MHC class I receptor activity [GO:0032396]; transmembrane signaling receptor activity [GO:0004888] FUNCTION: May act as receptor for class I MHC antigens."
+# Concatenate 'table_1' and 'gene_discussion' into one string
+text_discussion <- paste(table_1, table_2)
+text_discussion <- paste(table_2)
+
+# Predefined components -----
+text_description <- "
+Instructions for Creating the 'Evidence Interpretation Summary' Section in a Clinical Genetics Report:
+Title: Begin with the section titled 'Evidence Interpretation Summary'.
+Objective: Summarize the biological role of the gene/protein related to the pathogenic variant found in the patient.
+Explanation of Clinical Relevance:
+Discuss the protein function details and their implications in the disease context.
+Highlight the clinical significance of the findings.
+Pathogenicity Assessment:
+Note that GuRu identified a pathogenic variant for one patient listed in Table 1.
+Mention the high total score from GuRu and the complex scoring functions which support the classification of this variant as pathogenic.
+Conclude that there is substantial evidence to consider this variant a likely causal genetic determinant of the disease.
+Language and Formatting:
+Use concise, clinically appropriate language.
+Ensure all information provided is directly relevant to the genetic interpretation.
+Format the summary to comply with the LaTeX document structure, using appropriate sectioning for clarity and readability.
+"
 
 # Complete prompt construction for each loop
-prompt <- paste(description_text, variant_info, table_1, gene_discussion, sep=" ")
+prompt <- paste(text_description, text_discussion, sep=" ")
 
 data_source <- "x"
 model <- "llama3.2"
 model <- "deepseek-r1"
 
-# Simulating multiple entries handling
-# Assuming 'generate' function and 'resp_process' are defined to handle the generation and processing of responses
 responses <- lapply(1:length(data_source), function(i) {
-	# Start timing
 	start_time <- Sys.time()
-	
-	# Assuming data_source contains different gene data for multiple patients
-	# Modify prompt with actual data from data_source[i]
-	modified_prompt <- prompt  # Here you would modify the prompt according to data_source[i]
-	
+
 	# Generate response
-	resp <- generate(model, modified_prompt, stream = TRUE)
+	resp <- generate(model, prompt, stream = TRUE)
 	
 	# Process and save response
 	processed_text <- resp_process(resp, "text")
 	writeLines(processed_text, con=paste0("Output_", i, ".txt"))
 	
-	# Calculate elapsed time
 	elapsed_time <- difftime(Sys.time(), start_time, units="secs")
-	
-	# Print model and time taken
 	cat("Model used:", model, "\nTime taken:", elapsed_time, "seconds\n")
-	
 
 	return(processed_text)
 })
@@ -229,30 +90,24 @@ responses <- lapply(1:length(data_source), function(i) {
 # Review responses or use them as needed
 responses
 
-
-
 library(stringr)
 
-
 processed_text <- responses[1]
-
-# Split the text at "</think>" and take everything after it
 parts <- str_split(processed_text, "</think>", 2)
 extracted_text <- if(length(parts[[1]]) > 1) trimws(parts[[1]][2]) else ""
 
 
+# Save the extracted text to file, naming with data source details and model
+file_name <- paste0("Output_", data_source, "_", model, ".txt")
+
+writeLines(extracted_text, con=file_name)
+
 
 # Save the extracted text to file, naming with data source details and model
 file_name <- paste0("Output_", data_source[i]$sample_id, "_", model, ".txt")
 writeLines(extracted_text, con=file_name)
 
-# Save the extracted text to file, naming with data source details and model
-file_name <- paste0("Output_", data_source[i]$sample_id, "_", model, ".txt")
-writeLines(extracted_text, con=file_name)
 
-
-<think>
-</think>
 
 
 
@@ -265,3 +120,21 @@ writeLines(extracted_text, con=file_name)
 
 # generate("llama3.1", "Tomorrow is a...", output = "df", stream = TRUE)
 
+
+# About ----
+  # Note: You should have at least 8 GB of RAM available to run the 7B models, 16 GB to run the 13B models, and 32 GB to run the 33B models.
+  
+  #' @article{Lin2025JOSS,
+  #' 	author = {Lin, Hause and Safi, Tawab}, 
+  #' 	title = {ollamar: An R package for running large language models}, 
+  #' 	journal = {Journal of Open Source Software}, 
+  #' 	volume = {10}, 
+  #' 	number = {105}, 
+  #' 	pages = {7211}, 
+  #' 	year = {2025},
+  #' 	month = jan,
+  #' 	volume = {10}, 
+  #' 	doi = {10.21105/joss.07211},
+  #' 	url = {https://joss.theoj.org/papers/10.21105/joss.07211}
+  #' }
+  

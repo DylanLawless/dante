@@ -13,6 +13,57 @@ This repository contains R code for generating clinical genetic reports from the
 - **Data visualisation**: Includes PCA plots and tabular summaries of variants.
 - **Standards compliant**: Adheres to ACMG guidelines for variant interpretation.
 
+
+## Exported Datasets
+
+We export 4 CSV datasets from the paths specified below:
+
+1. **Core Dataset**
+	- **Path**: `PanelAppData_genes_combined_core`
+	- **Contains fields**:
+		- `id`
+		- `Gene`
+		- `confidence_level`
+		- `mode_of_inheritance`
+		- `name`
+		- `disease_group`
+		- `disease_sub_group`
+		- `status`
+
+2. **Minimal Dataset**
+	- **Path**: `PanelAppData_genes_combined_minimal`
+	- **Contains fields**:
+		- `panel ID`
+		- `Gene symbol`
+
+3. **Metadata Dataset**
+	- **Path**: `PanelAppData_genes_combined_meta_names.csv`
+	- **Contains fields**:
+		- `panel id`
+		- `panel name`
+
+4. **Metadata Counts**
+	- **Path**: `PanelAppData_genes_combined_meta_variable_counts.csv`
+	- **Description**: Contains metadata counts for each variable
+		- **Contains**:
+
+```plaintext
+# A tibble: 52 × 2
+Column_Name           Unique_Counts
+<chr>                         <int>
+1 id                              447
+2 entity_type                       1
+3 Gene                           6280
+4 confidence_level                  4
+5 penetrance                        4
+6 mode_of_pathogenicity            12
+7 publications                  13102
+8 evidence                       3653
+9 phenotypes                    21636
+10 mode_of_inheritance              15
+# ℹ 42 more rows
+```
+
 ## Tree
 
 Currently, the private data from WGS in set in .gitinore for 
