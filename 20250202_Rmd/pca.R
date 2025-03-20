@@ -1,10 +1,21 @@
-library(dplyr)
-library(ggplot2)
-library(ggrepel)
+# library(dplyr)
+# library(ggplot2)
+# library(ggrepel)
+
+# library(patchwork)
+# library(RColorBrewer)
+
+# # Read subject ID and plot
+# singlecase_ID <- "HCY001"
+
+# source: 21b_pca_biplot_1kg_part3_ggplot_vcurrent.R
+# pca_path <- "../../variant_level/data/scicore_PCA/PCA" 
+# case_out <- "../output/" 
 
 # Example individual case plot for genetic reports ----
 df <- readRDS(paste0(pca_path, "data_PCA_biplot_swisspedhealth_1kg_singlecase.Rds"))
 
+ 
 # custom - rename IDs to drop symbol
 df <- df %>% mutate(Individual.ID = str_replace_all(Individual.ID, "_", ""))
 

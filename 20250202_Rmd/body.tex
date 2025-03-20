@@ -1,0 +1,58 @@
+
+\begin{titlepage}
+    % Use an empty minipage to start the flow from the top left, pushing content right
+    \begin{minipage}[t]{0.66\textwidth}
+        \raggedright
+    \end{minipage}
+    \hfill
+    % Top right minipage for SwissPedHealth
+    \begin{minipage}[t]{0.33\textwidth}
+        \raggedleft % Right-aligns the text within the minipage
+        \fontsize{10}{12}\selectfont
+        SwissPedHealth\\
+        \texttt{Design DNA SNV INDEL v1}
+    \end{minipage}
+
+    \vspace*{\fill} % Vertical space to push title in the middle
+
+    % Centered title block
+    {\centering % Begin a group for centering
+    \fontsize{38}{46}\selectfont\textbf{Genomic analysis\\patient report}\par} % End of centered title
+    
+    \vspace*{\fill} % Vertical space to balance between title and bottom elements
+
+    % Bottom left minipage for Author information
+    % Start from the left edge
+    \noindent % This command negates any paragraph indentation
+    \begin{minipage}[b]{0.26\textwidth}
+        \raggedright
+        \fontsize{10}{12}\selectfont
+        \textbf{Author:}
+        Dylan Lawless, PhD., 
+        Department of Intensive Care and Neonatology, 
+        University Children's Hospital Zürich, 
+        University of Zürich.\\
+        \href{mailto:dylan.lawless@kispi.uzh.ch}{dylan.lawless@kispi.uzh.ch}
+    \end{minipage}
+    
+    \hfill
+        \begin{minipage}[t]{0.73\textwidth}
+        \raggedleft
+    \end{minipage}
+
+  %  \vfill
+
+    % Print the current date centered at the bottom
+    \centering
+    \normalsize
+    \today
+\definecolor{kispiblue}{HTML}{701A57}
+    
+\begin{tikzpicture}[font=\sffamily, remember picture, overlay]
+    \path (current page.south west) node[above right, fill=kispiblue, minimum width=\paperwidth, minimum height=1cm] (box){};
+
+    \path (box.west) node[right=5mm, align=left] {
+        {\fontsize{10pt}{10pt}\color{white}For research use only. Not for use in diagnostic procedures.}
+    };
+\end{tikzpicture}
+\end{titlepage}

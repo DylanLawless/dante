@@ -111,13 +111,13 @@ This pipeline is concerned with WGS germline short variant discovery (SNVs + Ind
 # library(kableExtra)
 # 
 # https://haozhu233.github.io/kableExtra/awesome_table_in_pdf.pdf
-# x <- kable(current_data, "latex", booktabs = TRUE) |>
-#   kable_styling(full_width = TRUE, font_size = 8) |>
+# x <- kable(current_data, "latex", booktabs = TRUE) %>%
+#   kable_styling(full_width = TRUE, font_size = 8) %>%
 #   column_spec(5:6, width = "3cm") 
 # 
 # column_spec(x, 1, latex_column_spec = ">{\\\\color{kispiblue}}c")  
 ```
-`r print("! Only variants 1-10 max are shown")`
+`r print("! Only variants 1-5 shown")`
 <!-- \end{landscape} -->
 
 <!-- #e0f2f1 -->
@@ -181,15 +181,47 @@ get_impact_color <- function(impact) {
 }
 ```
 
+```{r results='asis', echo=FALSE}
+for (i in 1:nrow(current_data)) {
+  
+  # Conditional formatting for Guru score field
+  score_color_start <- get_score_color(current_data$ACMG_total_score[i])
+  score_text <- paste0(score_color_start, current_data$ACMG_total_score[i], "}}")
+  
+  # Conditional formatting for IMPACT field
+  impact_color_start <- get_impact_color(current_data$IMPACT[i])
+  impact_text <- paste0(impact_color_start, current_data$IMPACT[i], "}}")
+  
+  # Define the title using the loop index
+  box_title <- paste0("Patient candidate variant ", i)
+
+  # Start the tcolorbox with a dynamic title
+  cat(sprintf("\\begin{tcolorbox}[colback=gray!05, colframe=kispiblue, boxrule=0.5mm, arc=1mm, boxsep=2mm, title=%s]\n", box_title))
+
+  # Start the tabular environment to align text at the colon
+  cat("\\begin{tabular}{@{}l@{\\hspace{3pt}}l@{}}\n")  # Adjust spacing as needed
+
+  cat(paste0("Patient ID: &", current_data$sample.id[i], "\\\\ \n"))
+  cat(paste0("Guru score: &", score_text, "\\\\ \n"))
+  cat(paste0("Impact: &", impact_text, "\\\\ \n"))
+  cat(paste0("Gene symbol: &", current_data$SYMBOL[i], "\\\\ \n"))
+  cat(paste0("Consequence: &", current_data$Consequence[i], "\\\\ \n"))
+  cat(paste0("HGVSc (cDNA change): &", current_data$HGVSc[i], "\\\\ \n"))
+  cat(paste0("HGVSp (Protein change): &", current_data$HGVSp[i], "\\\\ \n"))
+  cat(paste0("Genotype: &", current_data$genotype[i], "\\\\ \n"))
+  cat(paste0("gnomAD allele frequency: &", current_data$gnomAD_AF[i], "\\\\ \n"))
+  cat(paste0("Compound heterozygous flag: &", current_data$comp_het_flag[i], "\\\\ \n"))
+  cat(paste0("ACMG count: &", current_data$ACMG_count[i], "\\\\ \n"))
+  cat(paste0("Patient max score: &", current_data$MaxScore[i], "\\\\ \n"))
+
+  cat("\\end{tabular}\n")
+  cat("\\end{tcolorbox}\n\\vspace{5mm}\n")  
+}
+```
+
 
 ```{r results='asis', echo=FALSE}
 # Create a legend for the score ranges using colors, in reverse order
-# impact_categories <- c("MODIFIER", "LOW", "MODERATE", "HIGH")  # Correct order
-
-categories <- c("Pathogenic", "Likely Pathogenic", "Uncertain", "Likely Benign", "Benign")
-point_ranges <- c("≥10", "6 to 9", "0 to 5", "-1 to -6", "≤ -7")
-
-
 legend_guru_score <- ""
 for (i in length(categories):1) {
   color_start <- get_score_color_by_range(point_ranges[i])
@@ -216,47 +248,6 @@ legend_impact_line <- paste(legend_impact_text, collapse=", ")
 # Print the legend text as a standalone line
 cat(paste0(""))
 cat(paste0("Impact range: ", legend_impact_line))
-```
-
-
-```{r results='asis', echo=FALSE}
-for (i in 1:nrow(current_data)) {
-  
-  # Conditional formatting for Guru score field
-  score_color_start <- get_score_color(current_data$ACMG_total_score[i])
-  score_text <- paste0(score_color_start, current_data$ACMG_total_score[i], "}}")
-  
-  # Conditional formatting for IMPACT field
-  impact_color_start <- get_impact_color(current_data$IMPACT[i])
-  impact_text <- paste0(impact_color_start, current_data$IMPACT[i], "}}")
-  
-  # Define the title using the loop index
-  box_title <- paste0("Patient candidate variant ", i)
-
-  # Start the tcolorbox with a dynamic title
-  cat(sprintf("\\begin{tcolorbox}[colback=gray!05, colframe=kispiblue, boxrule=0.5mm, arc=1mm, boxsep=2mm, title=%s]\n", box_title))
-
-  # Start the tabular environment to align text at the colon
-  cat("\\begin{tabular}{@{}l@{\\hspace{3pt}}l@{}}\n")  # Adjust spacing as needed
-
-  cat(paste0("Patient ID: &", current_data$sample.id[i], "\\\\ \n"))
-  cat(paste0("Guru score: &", score_text, "\\\\ \n"))
-  cat(paste0("Impact: &", impact_text, "\\\\ \n"))
-  cat(paste0("GRCh38: &", current_data$rownames[i], "\\\\ \n"))
-  cat(paste0("Gene symbol: &", current_data$SYMBOL[i], "\\\\ \n"))
-  cat(paste0("Consequence: &", current_data$Consequence[i], "\\\\ \n"))
-  cat(paste0("HGVSc (cDNA change): &", current_data$HGVSc[i], "\\\\ \n"))
-  cat(paste0("HGVSp (Protein change): &", current_data$HGVSp[i], "\\\\ \n"))
-  cat(paste0("Genotype: &", current_data$genotype_name[i], "\\\\ \n"))
-  cat(paste0("gnomAD allele frequency: &", current_data$gnomAD_AF[i], "\\\\ \n"))
-  cat(paste0("Compound heterozygous flag: &", current_data$comp_het_flag[i], "\\\\ \n"))
-  cat(paste0("ACMG count: &", current_data$ACMG_count[i], "\\\\ \n"))
-  cat(paste0("Patient max score: &", current_data$MaxScore[i], "\\\\ \n"))
-  cat(paste0("ACMG criteria: &", current_data$ACMG_criteria[i], "\\\\ \n"))
-  
-  cat("\\end{tabular}\n")
-  cat("\\end{tcolorbox}\n\\vspace{5mm}\n")  
-}
 ```
 
 
@@ -500,9 +491,13 @@ To do:
 
 * Done - Guru geneIllustrate
 * Done - Genetic ancestry
-* Reformat the summary report variants in a condensed format and include more metadata.
-* This section should include the result and reasons why the variants were flagged for reporting.
-* Include the summary report with addition of all of the flags triggered, the observation that cuases the tirgger: guru score, pathogenic on clinvar, pathogenicity engine results, and evidence figures.
+* Reformat the summary report variants in a condensed format and include more
+metadata.
+* This section should include the result and reasons why the variants were flagged
+for reporting.
+* Inlcude the summary report with addition of all of the flags triggered, the
+observation that cuases the tirgger: guru score, pathogenic on clinvar,
+pathogenicity engine results, and evidence figures.
 * Guru AutoDestructR - swap the static example with linked result
 * GuruUniprotR - get protein pathway from ProteoMCLustR
 * Guru GetDiscussion - link to module result

@@ -1,0 +1,90 @@
+\usepackage[document]{ragged2e}
+% \usepackage[document]{ragged2e}
+
+\tolerance=9999
+\emergencystretch=10pt
+\hyphenpenalty=10000
+\exhyphenpenalty=100
+
+\usepackage{geometry}
+\geometry{
+    a4paper,
+    left=24mm,
+    right=24mm,
+    top=24mm,
+    bottom=24mm,
+}
+
+\usepackage{xurl} % for '\url' macro
+\usepackage{graphicx}
+%  \setlength{\RaggedRightParindent}{\parindent}
+\usepackage{tabularx} % Extended table functionalities
+\usepackage{hyperref} % For hyperlinks
+ \usepackage{xcolor} % Custom colors
+% \usepackage[table]{xcolor}
+% \usepackage[dvipsnames,svgnames,x11names,table]{xcolor}
+%\usepackage{colortbl}
+\usepackage{fontspec} % Custom fonts
+\usepackage{lineno} % used along with \linenumbers after begin document. 
+\usepackage{microtype} % Creates better spaced text
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyfoot{} % clear all footer fields
+%\fancyfoot[C]{SwissPedHealth confidential}
+\fancyfoot[l]{SwissPedHealth confidential}
+\fancyfoot[r]{\texttt{Design DNA SNV INDEL v1}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\usepackage{setspace} % line spacing
+  \setstretch{1.2}
+
+
+% Include packages
+\usepackage{sectsty} % Custom section styling
+
+% Font and color configurations
+\sectionfont{\fontsize{28}{34}\selectfont\color{black}} % Header 1
+\subsectionfont{\fontsize{22}{26}\selectfont\color{black}} % Header 2
+\subsubsectionfont{\fontsize{22}{26}\selectfont\color{black}} % Header 3
+
+\usepackage{listings}
+\lstset{
+  basicstyle=\fontsize{12}{14}\selectfont\ttfamily, % Code font style
+  breaklines=true,
+  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+}
+
+\renewcommand{\normalsize}{\fontsize{12}{14}\selectfont}
+
+\usepackage{fontspec}
+
+% Set IBM Plex Mono for monospaced text
+\setmonofont{IBM Plex Mono}[Contextuals={WordInitial,WordFinal}]
+\setmainfont{IBM Plex Sans}
+  
+  
+
+\usepackage{listings}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{placeins}
+\definecolor{kispiblue}{HTML}{701A57}
+\usepackage{tikz}
+\usetikzlibrary{positioning,chains}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins, breakable}  % breakable for long text boxes % If you need advanced skin features like "enhanced"
+
+
+% City sunset: https://www.color-hex.com/color-palette/40131
+\definecolor{colorSUNSET1}{HTML}{eeaf61}
+\definecolor{colorSUNSET2}{HTML}{fb9062}
+\definecolor{colorSUNSET3}{HTML}{ee5d6c}
+\definecolor{colorSUNSET4}{HTML}{ce4993}
+\definecolor{colorSUNSET5}{HTML}{6a0d83}
+
+\usepackage{dirtree}  % Load the dirtree package
+
+

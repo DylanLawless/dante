@@ -1,100 +1,88 @@
+library(dplyr)
+
+output_dir <- "../data/"
+custom_variable <- ""
+df_report_discussion <- readr::read_tsv(file=(paste0(output_dir, "get_discussion/df_report_discussion_", custom_variable, ".tsv")))
+
+df_mim <- data.table::fread( file="../../scicore_mirror/data/acmguru_data_20250107/ACMGuru_singlecase_df_report_v1_momic_samplecount_180_all_chr_rank1_mim.csv", sep = ",")
+
+# run server -----
 # install.packages("ollamar")
 library(ollamar)
-
-# Note: You should have at least 8 GB of RAM available to run the 7B models, 16 GB to run the 13B models, and 32 GB to run the 33B models.
-
-#' @article{Lin2025JOSS,
-#' 	author = {Lin, Hause and Safi, Tawab}, 
-#' 	title = {ollamar: An R package for running large language models}, 
-#' 	journal = {Journal of Open Source Software}, 
-#' 	volume = {10}, 
-#' 	number = {105}, 
-#' 	pages = {7211}, 
-#' 	year = {2025},
-#' 	month = jan,
-#' 	volume = {10}, 
-#' 	doi = {10.21105/joss.07211},
-#' 	url = {https://joss.theoj.org/papers/10.21105/joss.07211}
-#' }
-
-# example use ----
-test_connection()  # test connection to Ollama server
-# if you see "Ollama local server not running or wrong server," Ollama app/server isn't running
-
-# download a model
-# pull("llama3.1")  # download a model (equivalent bash code: ollama run llama3.1)
-
-# generate a response/text based on a prompt; returns an httr2 response by default
-resp <- generate("llama3.1", "tell me a 5-word story")
-resp
-
-#' interpret httr2 response object
-#' <httr2_response>
-#' POST http://127.0.0.1:11434/api/generate  # endpoint
-#' Status: 200 OK  # if successful, status code should be 200 OK
-#' Content-Type: application/json
-#' Body: In memory (414 bytes)
-
-# get just the text from the response object
-resp_process(resp, "text")
-# get the text as a tibble dataframe
-resp_process(resp, "df")
-
-# alternatively, specify the output type when calling the function initially
-txt <- generate("llama3.1", "tell me a 5-word story", output = "text")
-
-# list available models (models you've pulled/downloaded)
+test_connection()
 list_models()
 
-
-# test ----
-resp <- generate("deepseek-r1", "tell me a 5-word story")
-resp
-resp_process(resp, "text")
-
-
 # Real world application ----
+data <- df_mim |> dplyr::slice(1)
 
-# Predefined components
-description_text <- "You are writing the variant interpretation step of a clinical genetics report in LaTeX format. It must be clear and succinct and therefore have no unrelated content so that the reader can understand. The is important to report the provided factual evidence correctly. This final result will be in LaTeX format with the section heading \\section{Evidence interpretation summary}."
+table_1 <- data |> dplyr::select(
+"sample.id",
+"ACMG_total_score",
+"ACMG_count",
+"SYMBOL",
+"HGVSp",
+"HGVSc",
+"Consequence",
+"IMPACT",
+# "genotype",
+"gnomAD_AF",
+"mim_morbid_description") 
 
-# Table data and gene discussion information could be sourced from external data handling
-variant_info <- "Here is a genetic variant for 1 patient in table 1 as detected by GuRu. Based on the ACMG.score and the numerous complex scoring functions of GuRu we say that this variant is pathogenic."
+table_1 <- paste(names(table_1), table_1[1, ], sep=": ", collapse=". ")
+class(table_1)
+intro_text <- "Here is the variant interpretation output from GuRu:"
+table_1 <- paste(intro_text, table_1)
 
-table_1 <- "Table 1: sample.id pathway_id SYMBOL Variant.GRCh38 HGVSp HGVSc Consequence IMPACT genotype Inheritance gnomAD_AF ACMG.score 261 22 LILRA1 chr19:54596470_T/C ENSP00000251372.3:p.Ser414Pro ENST00000251372.8:c.1240T>C missense_variant MODERATE 1 NA 0 8"
+# Print the combined text
+print(table_1)
 
-gene_discussion <- "Here is the get_discussion output from GuRu for this gene: SYMBOL Protein.names Gene.Ontology..molecular.function. Function..CC. LILRA1 Leukocyte immunoglobulin-like receptor subfamily A member 1 (CD85 antigen-like family member I) (Leukocyte immunoglobulin-like receptor 6) (LIR-6) (CD antigen CD85i) antigen binding [GO:0003823]; inhibitory MHC class I receptor activity [GO:0032396]; transmembrane signaling receptor activity [GO:0004888] FUNCTION: May act as receptor for class I MHC antigens."
+gene_discussion <- df_report_discussion %>% dplyr::filter(SYMBOL %in% data$SYMBOL) 
+gene_discussion <- paste(names(gene_discussion), gene_discussion[1, ], sep=": ", collapse=". ")
+
+intro_text2 <- "Here is the get_discussion output from GuRu:"
+table_2 <- paste(intro_text2, gene_discussion)
+
+# Concatenate 'table_1' and 'gene_discussion' into one string
+text_discussion <- paste(table_1, table_2)
+text_discussion <- paste(table_2)
+
+# Predefined components -----
+text_description <- "
+Instructions for Creating the 'Evidence Interpretation Summary' Section in a Clinical Genetics Report:
+Title: Begin with the section titled 'Evidence Interpretation Summary'.
+Objective: Summarize the biological role of the gene/protein related to the pathogenic variant found in the patient.
+Explanation of Clinical Relevance:
+Discuss the protein function details and their implications in the disease context.
+Highlight the clinical significance of the findings.
+Pathogenicity Assessment:
+Note that GuRu identified a pathogenic variant for one patient listed in Table 1.
+Mention the high total score from GuRu and the complex scoring functions which support the classification of this variant as pathogenic.
+Conclude that there is substantial evidence to consider this variant a likely causal genetic determinant of the disease.
+Language and Formatting:
+Use concise, clinically appropriate language.
+Ensure all information provided is directly relevant to the genetic interpretation.
+Format the summary to comply with the LaTeX document structure, using appropriate sectioning for clarity and readability.
+"
 
 # Complete prompt construction for each loop
-prompt <- paste(description_text, variant_info, table_1, gene_discussion, sep=" ")
+prompt <- paste(text_description, text_discussion, sep=" ")
 
 data_source <- "x"
 model <- "llama3.2"
 model <- "deepseek-r1"
 
-# Simulating multiple entries handling
-# Assuming 'generate' function and 'resp_process' are defined to handle the generation and processing of responses
 responses <- lapply(1:length(data_source), function(i) {
-	# Start timing
 	start_time <- Sys.time()
-	
-	# Assuming data_source contains different gene data for multiple patients
-	# Modify prompt with actual data from data_source[i]
-	modified_prompt <- prompt  # Here you would modify the prompt according to data_source[i]
-	
+
 	# Generate response
-	resp <- generate(model, modified_prompt, stream = TRUE)
+	resp <- generate(model, prompt, stream = TRUE)
 	
 	# Process and save response
 	processed_text <- resp_process(resp, "text")
 	writeLines(processed_text, con=paste0("Output_", i, ".txt"))
 	
-	# Calculate elapsed time
 	elapsed_time <- difftime(Sys.time(), start_time, units="secs")
-	
-	# Print model and time taken
 	cat("Model used:", model, "\nTime taken:", elapsed_time, "seconds\n")
-	
 
 	return(processed_text)
 })
@@ -102,30 +90,24 @@ responses <- lapply(1:length(data_source), function(i) {
 # Review responses or use them as needed
 responses
 
-
-
 library(stringr)
 
-
 processed_text <- responses[1]
-
-# Split the text at "</think>" and take everything after it
 parts <- str_split(processed_text, "</think>", 2)
 extracted_text <- if(length(parts[[1]]) > 1) trimws(parts[[1]][2]) else ""
 
 
+# Save the extracted text to file, naming with data source details and model
+file_name <- paste0("Output_", data_source, "_", model, ".txt")
+
+writeLines(extracted_text, con=file_name)
+
 
 # Save the extracted text to file, naming with data source details and model
 file_name <- paste0("Output_", data_source[i]$sample_id, "_", model, ".txt")
 writeLines(extracted_text, con=file_name)
 
-# Save the extracted text to file, naming with data source details and model
-file_name <- paste0("Output_", data_source[i]$sample_id, "_", model, ".txt")
-writeLines(extracted_text, con=file_name)
 
-
-<think>
-</think>
 
 
 
@@ -138,3 +120,21 @@ writeLines(extracted_text, con=file_name)
 
 # generate("llama3.1", "Tomorrow is a...", output = "df", stream = TRUE)
 
+
+# About ----
+  # Note: You should have at least 8 GB of RAM available to run the 7B models, 16 GB to run the 13B models, and 32 GB to run the 33B models.
+  
+  #' @article{Lin2025JOSS,
+  #' 	author = {Lin, Hause and Safi, Tawab}, 
+  #' 	title = {ollamar: An R package for running large language models}, 
+  #' 	journal = {Journal of Open Source Software}, 
+  #' 	volume = {10}, 
+  #' 	number = {105}, 
+  #' 	pages = {7211}, 
+  #' 	year = {2025},
+  #' 	month = jan,
+  #' 	volume = {10}, 
+  #' 	doi = {10.21105/joss.07211},
+  #' 	url = {https://joss.theoj.org/papers/10.21105/joss.07211}
+  #' }
+  
