@@ -2,7 +2,7 @@
 
 This repository contains R code for generating clinical genetic reports from the output of a Whole Genome Sequencing (WGS) pipeline. The main functionality transforms raw pipeline data into structured reports (PDF/HTML) that provide variant interpretation and annotations for clinical analysis.
 
-<img src="images/logo_heracles.webp" style="width: 80%;" alt="Heracles logo"/>
+<img src="images/logo_dante.webp" style="width: 80%;" alt="Heracles logo"/>
 
 
 ## Overview

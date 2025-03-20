@@ -2,7 +2,7 @@
 \usepackage[printonlyused,withpage,nohyperlinks]{acronym}
  
 \begin{document}
-\title{Heracles Automates Clinical Genetic Interpretation Reports in Genome Sequencing}	
+\title{Dante Automates Clinical Genetic Interpretation Reports in Genome Sequencing}	
 
 \author[1]{Dylan Lawless\thanks{Addresses for correspondence: \href{mailto:Dylan.Lawless@kispi.uzh.ch}{Dylan.Lawless@kispi.uzh.ch}}}
 
@@ -14,9 +14,9 @@
 Word count: 1342
 
 \begin{abstract}
-\noindent \textbf{Motivation:} Accurate and efficient clinical genetic reporting from whole genome sequencing (WGS) data is imperative for modern genomic medicine. Current methods often involve labour-intensive processes with potential for inconsistency. Heracles is designed to automate the transformation of raw WGS pipeline outputs into structured, standards-compliant clinical reports.\\[1ex]
-\noindent \textbf{Results:}  Heracles integrates a suite of R scripts and R Markdown templates to generate comprehensive clinical reports. The application incorporates variant annotation, ACMG guideline-based classification, and data visualisation—including principal component analysis (PCA) plots and detailed tabular summaries. Validation on test datasets demonstrates enhanced reproducibility and reduced processing time relative to conventional manual approaches.\\[1ex]
-\noindent \textbf{Availability:}  The source code and documentation are accessible at \url{https://github.com/DylanLawless/Heracles}. Heracles is available under the MIT licence. The supporting datasets will be maintained for a minimum of two years following publication.
+\noindent \textbf{Motivation:} Accurate and efficient clinical genetic reporting from whole genome sequencing (WGS) data is imperative for modern genomic medicine. Current methods often involve labour-intensive processes with potential for inconsistency. Dante is designed to automate the transformation of raw WGS pipeline outputs into structured, standards-compliant clinical reports.\\[1ex]
+\noindent \textbf{Results:}  Dante integrates a suite of R scripts and R Markdown templates to generate comprehensive clinical reports. The application incorporates variant annotation, ACMG guideline-based classification, and data visualisation—including principal component analysis (PCA) plots and detailed tabular summaries. Validation on test datasets demonstrates enhanced reproducibility and reduced processing time relative to conventional manual approaches.\\[1ex]
+\noindent \textbf{Availability:}  The source code and documentation are accessible at \url{https://github.com/DylanLawless/Dante}. Dante is available under the MIT licence. The supporting datasets will be maintained for a minimum of two years following publication.
 \end{abstract}
 \clearpage
 
@@ -41,7 +41,7 @@ Word count: 1342
 %Whole genome sequencing has become an essential tool in clinical genetics, yet the transformation of raw sequencing data into actionable reports remains challenging. 
 %A range of tools are used for detecting candidate causal or known pathogenic variants based on multiple evidence sources.
 %Translating the final actionable result to the end user remains a challenging task.
-%Heracles addresses this gap by automating the generation of clinical genetic reports from pipeline outputs. In doing so, it not only adheres to  guidelines for variant interpretation but also integrates diverse data visualisation techniques to enhance the clarity and reliability of the final reports. Here, we detail the design, implementation, and validation of Heracles, positioning it as a novel solution for automated clinical reporting in genomics.
+%Dante addresses this gap by automating the generation of clinical genetic reports from pipeline outputs. In doing so, it not only adheres to  guidelines for variant interpretation but also integrates diverse data visualisation techniques to enhance the clarity and reliability of the final reports. Here, we detail the design, implementation, and validation of Dante, positioning it as a novel solution for automated clinical reporting in genomics.
 %
 %
 %% \subsection{Variant Annotation and Pathogenicity Assessment}
@@ -53,13 +53,13 @@ Word count: 1342
 \noindent
 Whole genome sequencing (WGS) has revolutionised clinical genetics by enabling comprehensive analysis of genomic variation. WGS analysis is typically performed using tools such as GATK4 and DeepVariant for variant detection, while annotation is achieved with specialised tools like Ensembl VEP, Annovar, Nirvana, and combined with a rich source of annotation databases such as dbNSFP and gnomAD, which compile detailed information on gene impact, variant consequences, and population frequencies. Variant classification and pathogenicity scoring are further refined using standards and tools such as the ACMG guidelines and GuRu, among others, to assess the deleterious potential of each variant.
 
-Despite these advances, a critical gap remains in prioritising and delivering this complex genetic evidence in a clinically actionable format. The abundance of detailed clinical genetics data makes it challenging for bioinformaticians to effectively communicate results to clinicians, who often must rely on simplified metrics. Heracles addresses this final step by automating the generation of clinical reports that synthesise and present rich underlying evidence in a clear, concise format, thereby facilitating informed decision-making at the patient bedside.
+Despite these advances, a critical gap remains in prioritising and delivering this complex genetic evidence in a clinically actionable format. The abundance of detailed clinical genetics data makes it challenging for bioinformaticians to effectively communicate results to clinicians, who often must rely on simplified metrics. Dante addresses this final step by automating the generation of clinical reports that synthesise and present rich underlying evidence in a clear, concise format, thereby facilitating informed decision-making at the patient bedside.
 
 
 \section{Materials and Methods}
 \subsection{Implementation}
 \noindent
-Heracles is implemented in R and employs a modular suite of functions and Markdown templates to process and visualise actionable WGS data results. The core functionality is distributed across multiple scripts, including \texttt{report\_runner}, \texttt{pca}, and other dedicated modules for data cleaning, analysis, and report generation. The application employs key packages such as \texttt{knitr}, \texttt{kableExtra}, and various plotting libraries to create publication-ready PDF reports. The software architecture facilitates parameterised execution, enabling users to customise reports by supplying patient-specific identifiers and associated metadata.
+Dante is implemented in R and employs a modular suite of functions and Markdown templates to process and visualise actionable WGS data results. The core functionality is distributed across multiple scripts, including \texttt{report\_runner}, \texttt{pca}, and other dedicated modules for data cleaning, analysis, and report generation. The application employs key packages such as \texttt{knitr}, \texttt{kableExtra}, and various plotting libraries to create publication-ready PDF reports. The software architecture facilitates parameterised execution, enabling users to customise reports by supplying patient-specific identifiers and associated metadata.
 
 \subsection{Usage}
 \noindent
@@ -67,12 +67,15 @@ To generate a report, users execute the \texttt{report.Rmd} script, which orches
 
 \section{Results}
 \noindent
-Heracles produces comprehensive clinical reports that summarise genetic variant data, including ACMG scores, variant impacts, and detailed annotations. A notable feature is the inclusion of PCA plots that contextualise individual patient data within global and local reference cohorts. Comparative analysis with manual reporting methods demonstrates that Heracles not only improves consistency but also reduces the turnaround time for report generation. Figure~\ref{fig:performance} illustrates the performance metrics and visual output generated by Heracles.
+Dante produces comprehensive clinical reports that summarise genetic variant data, including ACMG scores, variant impacts, and detailed annotations. A notable feature is the inclusion of PCA plots that contextualise individual patient data within global and local reference cohorts. Comparative analysis with manual reporting methods demonstrates that Dante not only improves consistency but also reduces the turnaround time for report generation. Figure~\ref{fig:performance} illustrates the performance metrics and visual output generated by Dante.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.99\textwidth]{heracles_model.pdf}
-    \caption{Performance and visual outputs generated by Heracles, demonstrating efficient integration of variant annotation, ACMG scoring, and PCA visualisation.}
+    \includegraphics[width=0.99\textwidth]{Dante_model.pdf}
+    \includegraphics[width=0.32\textwidth]{sample_000_report_priority_0_1.pdf}
+   \includegraphics[width=0.32\textwidth]{sample_000_report_priority_0_2.pdf}
+  \includegraphics[width=0.32\textwidth]{sample_000_report_priority_0_3.pdf}
+    \caption{Model and visual outputs generated by Dante, demonstrating efficient integration of variant annotation, ACMG scoring, other metrics.}
     \label{fig:performance}
 \end{figure}
 
@@ -95,24 +98,24 @@ Heracles produces comprehensive clinical reports that summarise genetic variant 
 
 \subsection{Integration of RAG-based Natural Language Interpretation}
 \noindent
-In Heracles, candidate genetic variants—prioritised by tools such as GuRu based on diverse evidence sources—are filtered to fewer than ten top candidates. Given the complexity and variability of the supporting data, a retrieval-augmented generation (RAG) step is used to generate a concise, user-friendly interpretation summary. This summary, generated via the DeepSeek-R1 model through the \texttt{ollamar} R interface, translates quantitative evidence (e.g. ACMG scores, allele frequencies, gene annotations) into plain language. The process ensures that the narrative is directly supported by raw evidence, reducing the likelihood of hallucination and allowing users to rely on a quantifiable accuracy of the interpretation.
+In Dante, candidate genetic variants—prioritised by tools such as GuRu based on diverse evidence sources—are filtered to fewer than ten top candidates. Given the complexity and variability of the supporting data, a retrieval-augmented generation (RAG) step is used to generate a concise, user-friendly interpretation summary. This summary, generated via the DeepSeek-R1 model through the \texttt{ollamar} R interface, translates quantitative evidence (e.g. ACMG scores, allele frequencies, gene annotations) into plain language. The process ensures that the narrative is directly supported by raw evidence, reducing the likelihood of hallucination and allowing users to rely on a quantifiable accuracy of the interpretation.
 
 
 \subsection{Benchmarking and Validation}
 \noindent
-Benchmarking was performed using  clinical datasets of both known diagnosis and new unknown rare disease cases. Validation metrics focused on the reproducibility of ACMG-based classifications and the accuracy of candiadate variant prioritisation. Statistical measures confirmed that Heracles delivers consistent performance across varying data sizes. The automated approach also minimised manual errors, thereby enhancing the overall reliability of the generated reports.
+Benchmarking was performed using  clinical datasets of both known diagnosis and new unknown rare disease cases. Validation metrics focused on the reproducibility of ACMG-based classifications and the accuracy of candiadate variant prioritisation. Statistical measures confirmed that Dante delivers consistent performance across varying data sizes. The automated approach also minimised manual errors, thereby enhancing the overall reliability of the generated reports.
 
 \section{Summary}
 \noindent
-Heracles represents a significant advancement in the field of clinical genetic report generation. By automating the transformation of raw WGS data into structured, standards-compliant reports, it streamlines the workflow for clinical laboratories and genomic research facilities. The integration of detailed variant annotation, ACMG guideline adherence, and comprehensive visualisation techniques ensures that reports are both technically robust and clinically informative. Future developments will focus on integrating additional external databases and expanding the tool’s capabilities to support a broader range of genomic analyses.
+Dante represents a significant advancement in the field of clinical genetic report generation. By automating the transformation of raw WGS data into structured, standards-compliant reports, it streamlines the workflow for clinical laboratories and genomic research facilities. The integration of detailed variant annotation, ACMG guideline adherence, and comprehensive visualisation techniques ensures that reports are both technically robust and clinically informative. Future developments will focus on integrating additional external databases and expanding the tool’s capabilities to support a broader range of genomic analyses.
 
 \section*{Acknowledgements}
 \noindent
-The development of Heracles was supported by colleagues at the University Children's Hospital Zürich and the University of Zürich. We thank the Swiss Multi-Omic Center for providing access to critical test datasets.
+The development of Dante was supported by colleagues at the University Children's Hospital Zürich and the University of Zürich. We thank the Swiss Multi-Omic Center for providing access to critical test datasets.
 
 \section*{Author Contributions}
 \noindent
-Dylan Lawless conceived and developed the Heracles pipeline, designed the study, and drafted the manuscript.
+Dylan Lawless conceived and developed the Dante pipeline, designed the study, and drafted the manuscript.
 
 \section*{Funding}
 \noindent
@@ -120,7 +123,7 @@ This work was funded by internal research grants at the University Children's Ho
 
 \section*{Data Availability}
 \noindent
-The Heracles source code, user documentation, and sample datasets are available at \url{https://github.com/DylanLawless/Heracles}. Supplementary materials and further documentation can be accessed through the project repository.
+The Dante source code, user documentation, and sample datasets are available at \url{https://github.com/DylanLawless/Dante}. Supplementary materials and further documentation can be accessed through the project repository.
 
 \section*{Competing interest}
 \noindent
